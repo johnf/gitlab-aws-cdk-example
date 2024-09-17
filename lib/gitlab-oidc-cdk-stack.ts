@@ -2,15 +2,23 @@ import * as cdk from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
 
 import * as iam from 'aws-cdk-lib/aws-iam';
+import { CfnOIDCProvider } from 'aws-cdk-lib/aws-iam';
 
 export class GitlabOidcCdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const provider = new iam.OpenIdConnectProvider(this, 'GitLabOidcProvider', {
+    // NOTE: This uses a custom lambda so we are switching to L1
+    // const provider = new iam.OpenIdConnectProvider(this, 'GitLabOidcProvider', {
+    //   url: 'https://gitlab.com',
+    //   clientIds: ['sts.amazonaws.com'],
+    // });
+
+    const provider = new CfnOIDCProvider(this, 'GitLabOidcProvider', {
       url: 'https://gitlab.com',
-      clientIds: ['sts.amazonaws.com'],
+      clientIdList: ['sts.amazonaws.com'],
     });
+    const providerArn = cdk.Token.asString(provider.ref);
 
     const org = 'orgname';
     const repo = 'app';
@@ -20,7 +28,7 @@ export class GitlabOidcCdkStack extends cdk.Stack {
     // const sub = `${org}/${repo}:*`;
 
     const role = new iam.Role(this, 'GitLabOidcRole', {
-      assumedBy: new iam.WebIdentityPrincipal(provider.openIdConnectProviderArn, {
+      assumedBy: new iam.WebIdentityPrincipal(providerArn, {
         StringEquals: {
           'gitlab.com:aud': 'sts.amazonaws.com',
         },

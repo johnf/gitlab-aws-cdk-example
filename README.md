@@ -5,6 +5,8 @@ Sets up the IAM provider and roles to allow GitLab to connect without secrets
 ## Setup a new account
 
 ``` bash
+yarn
+
 export AWS_PROFILE=xxx-dev
 ACCOUNT_NUMBER=$(aws sts get-caller-identity | jq -r .Account)
 
@@ -15,6 +17,8 @@ npx cdk --profile "$AWS_PROFILE" bootstrap aws://${ACCOUNT_NUMBER}/ap-southeast-
 npx cdk diff
 npx cdk deploy
 
+# If you just want cloudformation
+npx cdk synth > cf.yaml
 
 ## GitLab Setup
 
