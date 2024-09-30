@@ -1,6 +1,6 @@
-# Setup AWS to support OIDC to gitlab
+# Setup AWS to support OIDC in Bitbucket and GitLab
 
-Sets up the IAM provider and roles to allow GitLab to connect without secrets
+Sets up the IAM provider and roles to allow GitLab and Bitbucket to connect without secrets
 
 ## Setup a new account
 
@@ -18,7 +18,8 @@ npx cdk diff
 npx cdk deploy
 
 # If you just want cloudformation
-npx cdk synth > cf.yaml
+npx cdk synth GitlabOidcCdkStack  > gitlab.yaml
+npx cdk synth BitbucketOidcCdkStack  > bitbucket.yaml
 
 ## GitLab Setup
 
@@ -48,6 +49,28 @@ assume role:
   #     --output text))
   script:
     - aws sts get-caller-identity
+```
+
+## Bitbucket Setup
+
+Get your domain and audience from Bitbucket and add them to the script
+
+Add something like this to the Bitbucket pipeline
+NOTE: You should define ROLE_ARN in the project settings as the output from the cloudformation stack
+
+```yaml
+pipelines:
+  branches:
+    main:
+      - step:
+          name: Configure AWS credentials
+          oidc: true
+          script:
+            - export AWS_REGION=ap-southeast-2
+            - export AWS_ROLE_ARN=${ROLE_ARN}
+            - export AWS_WEB_IDENTITY_TOKEN_FILE=$(pwd)/web-identity-token
+            - echo $BITBUCKET_STEP_OIDC_TOKEN > $(pwd)/web-identity-token
+            - aws sts get-caller-identity
 ```
 
 ## Useful commands
